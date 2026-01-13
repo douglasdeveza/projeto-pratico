@@ -15,4 +15,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Exibir Hello World
-        run: echo "Hello World"
+        run: echo -e "\033[32mHello\033[0m World"
