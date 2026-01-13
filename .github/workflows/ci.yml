@@ -1,16 +1,18 @@
-name: CI - Hello World
-on: 
-    push:
-      branches:
-        - '**'
-      pull_request:
-        branches:
-          - '**'branches-ignore: 
 
-jobs: 
-  Hello:
+name: CI - Hello World
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  hello:
     runs-on: ubuntu-latest
-    steps: 
-     - uses: actions/checkout@v4
-     - name: Exibir Hello World
-     - run: echo "Hello World"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exibir Hello World
+        run: echo "Hello World"
