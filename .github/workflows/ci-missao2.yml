@@ -1,1 +1,105 @@
-"Desafio GitHub Actions - Missão 2 (CI Multi‑OS + Segurança)"
+# "Desafio GitHub Actions - Missão 2 (CI Multi‑OS + Segurança)"
+
+name: CI Multi-OS + Segurança
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+permissions:
+  contents: read
+
+jobs:
+  # -------------------------------------------------------------------
+  # 1) Hello World no Windows
+  # -------------------------------------------------------------------
+  hello_windows:
+    name: Hello World - Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exibir Hello World no Windows
+        run: echo "Hello World from Windows"
+
+  # -------------------------------------------------------------------
+  # 2) Hello World no Linux
+  # -------------------------------------------------------------------
+  hello_linux:
+    name: Hello World - Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exibir Hello World no Linux
+        run: echo "Hello World from Linux"
+
+  # -------------------------------------------------------------------
+  # 3) Scan de segurança no Windows (Snyk)
+  #    - Requer secret: SNYK_TOKEN
+  #    - Falha o job em vulnerabilidade 'high' ou superior
+  # -------------------------------------------------------------------
+  security_windows_snyk:
+    name: Segurança - Snyk (Windows)
+    runs-on: windows-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Exemplo com Node.js para instalar a CLI do Snyk via npm.
+      # Se o seu projeto for Java/.NET/etc., o Snyk também suporta.
+      - name: Instalar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar Snyk CLI
+        run: npm install -g snyk
+
+      - name: Autenticar Snyk
+        run: snyk auth $env:SNYK_TOKEN
+
+      # --severity-threshold=high faz o job FALHAR se houver vulnerabilidades altas
+      - name: Snyk Test (falha em alta severidade)
+        run: snyk test --severity-threshold=high --json-file-output=snyk-windows.json
+
+      - name: Publicar relatório Snyk (Windows)
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-snyk-windows
+          path: snyk-windows.json
+
+  # -------------------------------------------------------------------
+  # 4) Scan de segurança no Linux (Snyk)
+  #    - Requer secret: SNYK_TOKEN
+  #    - Falha o job em vulnerabilidade 'high' ou superior
+  # -------------------------------------------------------------------
+  security_linux_snyk:
+    name: Segurança - Snyk (Linux)
+    runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar Snyk CLI
+        run: npm install -g snyk
+
+      - name: Autenticar Snyk
+        run: snyk auth $SNYK_TOKEN
+
+      - name: Snyk Test (falha em alta severidade)
+        run: snyk test --severity-threshold=high --json-file-output=snyk-linux.json
+
+      - name: Publicar relatório Snyk (Linux)
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-snyk-linux
+          path: snyk-linux.json
+``
