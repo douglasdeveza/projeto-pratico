@@ -1,99 +1,17 @@
 
-name: CI - Snyk (base - Hello Multi-OS)
+name: CI - App Médio (Só Snyk)
 
 on:
   workflow_dispatch: {}
   push:
-    branches: ["**"]
-  pull_request:
-    branches: ["**"]
-
-permissions:
-  contents: read
+    branches: ["main"]
 
 jobs:
-  # ----------------------------
-  # Base já criada (NÃO REMOVER)
-  # ----------------------------
-  hello_linux:
-    name: Hello - Linux (base)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Mensagem
-        run: echo "Hello from Linux (Snyk base)"
-
-  hello_windows:
-    name: Hello - Windows (base)
-    runs-on: windows-latest
-    steps:
-      - name: Mensagem
-        run: echo "Hello from Windows (Snyk base)"
-
-  # ----------------------------
-  # NOVO: Snyk no Linux
-  # ----------------------------
-  snyk_linux:
-    name: Snyk - Linux (gate: high)
-    runs-on: ubuntu-latest
-    env:
+  run_snyk:
+    uses: douglasdeveza/projeto-pratico/.github/workflows/enterprise-snyk-reusable.yml@main
+    with:
+      enable_windows: true     # se o app compila em windows
+      enable_linux: true       # se também roda em linux
+      snyk_severity: high      # gate de severidade
+    secrets:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-    steps:
-      - uses: actions/checkout@v4
-
-      # Instala Node para instalar a CLI do Snyk via npm
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Instalar Snyk CLI
-        run: npm install -g snyk
-
-      - name: Autenticar Snyk
-        run: snyk auth $SNYK_TOKEN
-
-      # Se seu repo for monorepo ou tiver manifests em subpastas,
-      # use a alternativa comentada logo abaixo.
-      - name: Snyk Test (falha em HIGH/CRITICAL)
-        run: snyk test --severity-threshold=high --json-file-output=snyk-linux.json
-
-      # Alternativa para monorepos:
-      # - name: Snyk Test (all projects - gate high)
-      #   run: snyk test --all-projects --detection-depth=3 --severity-threshold=high --json-file-output=snyk-linux.json
-
-      - name: Publicar relatório Snyk (Linux)
-        uses: actions/upload-artifact@v4
-        with:
-          name: report-snyk-linux
-          path: snyk-linux.json
-
-  # ----------------------------
-  # NOVO: Snyk no Windows
-  # ----------------------------
-  snyk_windows:
-    name: Snyk - Windows (gate: high)
-    runs-on: windows-latest
-    env:
-      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Instalar Snyk CLI
-        run: npm install -g snyk
-
-      - name: Autenticar Snyk
-        run: snyk auth $env:SNYK_TOKEN
-
-      - name: Snyk Test (falha em HIGH/CRITICAL)
-        run: snyk test --severity-threshold=high --json-file-output=snyk-windows.json
-
-      - name: Publicar relatório Snyk (Windows)
-        uses: actions/upload-artifact@v4
-        with:
-          name: report-snyk-windows
-          path: snyk-windows.json
