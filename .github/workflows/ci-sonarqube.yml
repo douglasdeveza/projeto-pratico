@@ -1,0 +1,28 @@
+name: CI - Sonar (Base - Hello Multi-OS)
+
+on: 
+  workflow_dispatch: {}
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+permissions:
+  contents: read
+
+jobs:
+  hello_linux:
+    name: Hello - Linux (base)
+    runs-on: ubuntu-latest
+    steps:
+      -  name: Mensagem
+        run: echo "Hello from Linux (sonar base)"
+
+  hello_windows:
+    name: Hello - Windows (base)
+    runs-on: windows-latest
+    steps: 
+      -  name: Mensagem
+        run: echo "Hello From Windows (Sonar base)
+
+``
