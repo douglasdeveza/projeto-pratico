@@ -1,75 +1,11 @@
 
-name: CI Missao 2 - Multi-OS + Segurança (Gate)
+name: CI Missão 2 (ZAP Multi-OS)
 
 on:
-  workflow_dispatch: {}      # <-- permite rodar pelo botão "Run workflow"
+  workflow_dispatch: {}
   push:
     branches: ["**"]
-  pull_request:
-    branches: ["**"]
-
-permissions:
-  contents: read
 
 jobs:
-  hello_windows:
-    name: Hello Windows
-    runs-on: windows-latest
-    steps:
-      - name: Mensagem
-        run: echo "Hello from Windows"
-
-  hello_linux:
-    name: Hello Linux
-    runs-on: ubuntu-latest
-    steps:
-      - name: Mensagem
-        run: echo "Hello from Linux"
-
-  security_linux_zap:
-    name: Segurança - ZAP (Linux)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Verificar Docker
-        run: docker --version
-      - name: Rodar ZAP Baseline (DAST passivo)
-        run: |
-          docker pull ghcr.io/zaproxy/zaproxy:stable
-          docker run --rm -v "$(pwd)":/zap/wrk \
-            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-            -t "https://httpbin.org" \
-            -r zap-report-linux.html -x zap-report-linux.xml -J zap-report-linux.json \
-            -m 1
-      - name: Publicar Relatórios (Linux)
-        uses: actions/upload-artifact@v4
-        with:
-          name: report-zap-linux
-          path: |
-            zap-report-linux.html
-            zap-report-linux.xml
-            zap-report-linux.json
-
-  security_windows_zap:
-    name: Segurança - ZAP (Windows)
-    runs-on: windows-latest
-    steps:
-      - name: Verificar Docker (Windows)
-        shell: powershell
-        run: docker --version
-      - name: Rodar ZAP Baseline (DAST passivo)
-        shell: bash
-        run: |
-          docker pull ghcr.io/zaproxy/zaproxy:stable
-          docker run --rm -v "$(pwd)":/zap/wrk \
-            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-            -t "https://httpbin.org" \
-            -r zap-report-windows.html -x zap-report-windows.xml -J zap-report-windows.json \
-            -m 1
-      - name: Publicar Relatórios (Windows)
-        uses: actions/upload-artifact@v4
-        with:
-          name: report-zap-windows
-          path: |
-            zap-report-windows.html
-            zap-report-windows.xml
-            zap-report-windows.json
+  missao2:
+    uses: douglasdeveza/projeto-pratico/.github/workflows/ci-zap-reusable.yml@main
