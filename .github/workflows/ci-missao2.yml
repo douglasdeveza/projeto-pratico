@@ -1,1 +1,24 @@
 
+name: CI Missao 2 - Teste Base
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+
+  hello_windows:
+    name: Hello Windows
+    runs-on: windows-latest
+    steps:
+      - name: Mensagem
+        run: echo "Hello from Windows"
+
+  hello_linux:
+    name: Hello Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mensagem
+        run: echo "Hello from Linux"
