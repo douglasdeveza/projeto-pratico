@@ -1,0 +1,105 @@
+
+name: Reusable - Enterprise Snyk
+
+on:
+  workflow_call:
+    inputs:
+      enable_windows:
+        type: boolean
+        default: true
+      enable_linux:
+        type: boolean
+        default: true
+      snyk_severity:
+        type: string
+        default: "high"     # 'low' | 'medium' | 'high' | 'critical'
+    secrets:
+      SNYK_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+
+  ##################################
+  # 1) HELLO WINDOWS
+  ##################################
+  hello_windows:
+    if: ${{ inputs.enable_windows }}
+    runs-on: windows-latest
+    steps:
+      - name: Hello Windows
+        run: echo "Hello from Windows (Enterprise Snyk)"
+
+  ##################################
+  # 2) HELLO LINUX
+  ##################################
+  hello_linux:
+    if: ${{ inputs.enable_linux }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hello Linux
+        run: echo "Hello from Linux (Enterprise Snyk)"
+
+  ##################################
+  # 3) SNYK LINUX
+  ##################################
+  snyk_linux:
+    if: ${{ inputs.enable_linux }}
+    runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar Snyk CLI
+        run: npm install -g snyk
+
+      - name: Autenticar Snyk
+        run: snyk auth $SNYK_TOKEN
+
+      - name: Snyk Test (Linux)
+        run: snyk test --severity-threshold=${{ inputs.snyk_severity }} --json-file-output=snyk-linux.json
+
+      - name: Artefato Snyk Linux
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-report-linux
+          path: snyk-linux.json
+
+  ##################################
+  # 4) SNYK WINDOWS
+  ##################################
+  snyk_windows:
+    if: ${{ inputs.enable_windows }}
+    runs-on: windows-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar Snyk CLI
+        run: npm install -g snyk
+
+      - name: Autenticar Snyk
+        run: snyk auth $env:SNYK_TOKEN
+
+      - name: Snyk Test (Windows)
+        run: snyk test --severity-threshold=${{ inputs.snyk_severity }} --json-file-output=snyk-windows.json
+
+      - name: Artefato Snyk Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-report-windows
+          path: snyk-windows.json
