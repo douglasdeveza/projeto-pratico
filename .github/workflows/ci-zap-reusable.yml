@@ -1,0 +1,70 @@
+
+name: Reusable - ZAP Multi-OS
+
+on:
+  workflow_call:
+
+jobs:
+  hello_windows:
+    name: Hello Windows
+    runs-on: windows-latest
+    steps:
+      - name: Mensagem
+        run: echo "Hello from Windows"
+
+  hello_linux:
+    name: Hello Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mensagem
+        run: echo "Hello from Linux"
+
+  security_linux_zap:
+    name: Segurança - ZAP (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar Docker
+        run: docker --version
+      - name: Rodar ZAP Baseline
+        run: |
+          docker pull ghcr.io/zaproxy/zaproxy:stable
+          docker run --rm -v "$(pwd)":/zap/wrk \
+            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+            -t "https://httpbin.org" \
+            -r zap-report-linux.html -x zap-report-linux.xml -J zap-report-linux.json \
+            -m 1
+      - name: Artefatos ZAP Linux
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-zap-linux
+          path: |
+            zap-report-linux.html
+            zap-report-linux.xml
+            zap-report-linux.json
+
+  security_windows_zap:
+    name: Segurança - ZAP (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar Docker
+        shell: powershell
+        run: docker --version
+      - name: Rodar ZAP Baseline
+        shell: bash
+        run: |
+          docker pull ghcr.io/zaproxy/zaproxy:stable
+          docker run --rm -v "$(pwd)":/zap/wrk \
+            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+            -t "https://httpbin.org" \
+            -r zap-report-windows.html -x zap-report-windows.xml -J zap-report-windows.json \
+            -m 1
+      - name: Artefatos ZAP Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-zap-windows
+          path: |
+            zap-report-windows.html
+            zap-report-windows.xml
+            zap-report-windows.json
