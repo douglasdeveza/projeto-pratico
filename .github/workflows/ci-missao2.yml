@@ -1,5 +1,5 @@
 
-name: CI Missao 2 - Teste Base
+name: CI Missao 2 - Teste Base + Segurança Linux
 
 on:
   push:
@@ -22,3 +22,29 @@ jobs:
     steps:
       - name: Mensagem
         run: echo "Hello from Linux"
+
+  security_linux_zap:
+    name: Segurança - ZAP (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar Docker disponível
+        run: docker --version
+
+      - name: Rodar ZAP Baseline (DAST passivo)
+        run: |
+          docker pull ghcr.io/zaproxy/zaproxy:stable
+          docker run --rm -v "$(pwd)":/zap/wrk \
+            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+            -t "https://httpbin.org" \
+            -r zap-report.html -x zap-report.xml -J zap-report.json \
+            -m 1
+      # -m 1 => falha se achar Medium/High
+
+      - name: Publicar Relatórios ZAP
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-zap-linux
+          path: |
+            zap-report.html
+            zap-report.xml
+            zap-report.json
