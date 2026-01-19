@@ -1,5 +1,5 @@
 
-name: CI Missao 2 - Teste Base + Segurança Linux
+name: CI Missao 2 - Multi-OS + Segurança (Gate)
 
 on:
   push:
@@ -7,8 +7,13 @@ on:
   pull_request:
     branches: ["**"]
 
-jobs:
+permissions:
+  contents: read
 
+jobs:
+  # -----------------------------
+  # 1) Hello World - Windows
+  # -----------------------------
   hello_windows:
     name: Hello Windows
     runs-on: windows-latest
@@ -16,6 +21,9 @@ jobs:
       - name: Mensagem
         run: echo "Hello from Windows"
 
+  # -----------------------------
+  # 2) Hello World - Linux
+  # -----------------------------
   hello_linux:
     name: Hello Linux
     runs-on: ubuntu-latest
@@ -23,11 +31,15 @@ jobs:
       - name: Mensagem
         run: echo "Hello from Linux"
 
+  # -----------------------------
+  # 3) Segurança - ZAP (Linux)
+  #    - Gate ativado (sem -I)
+  # -----------------------------
   security_linux_zap:
     name: Segurança - ZAP (Linux)
     runs-on: ubuntu-latest
     steps:
-      - name: Verificar Docker disponível
+      - name: Verificar Docker
         run: docker --version
 
       - name: Rodar ZAP Baseline (DAST passivo)
@@ -36,15 +48,49 @@ jobs:
           docker run --rm -v "$(pwd)":/zap/wrk \
             ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
             -t "https://httpbin.org" \
-            -r zap-report.html -x zap-report.xml -J zap-report.json \
+            -r zap-report-linux.html -x zap-report-linux.xml -J zap-report-linux.json \
             -m 1
-      # -m 1 => falha se achar Medium/High
+      # Sem -I => se houver WARN/FAIL, o script retorna código != 0
+      # Códigos do baseline: 0 OK | 1 FAIL | 2 WARN | 3 erro operacional
 
-      - name: Publicar Relatórios ZAP
+      - name: Publicar Relatórios (Linux)
         uses: actions/upload-artifact@v4
         with:
           name: report-zap-linux
           path: |
-            zap-report.html
-            zap-report.xml
-            zap-report.json
+            zap-report-linux.html
+            zap-report-linux.xml
+            zap-report-linux.json
+
+  # -----------------------------
+  # 4) Segurança - ZAP (Windows)
+  #    - Gate ativado (sem -I)
+  # -----------------------------
+  security_windows_zap:
+    name: Segurança - ZAP (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Verificar Docker (Windows)
+        shell: powershell
+        run: docker --version
+
+      # Vamos usar 'bash' para manter a mesma sintaxe do Linux:
+      - name: Rodar ZAP Baseline (DAST passivo)
+        shell: bash
+        run: |
+          docker pull ghcr.io/zaproxy/zaproxy:stable
+          docker run --rm -v "$(pwd)":/zap/wrk \
+            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+            -t "https://httpbin.org" \
+            -r zap-report-windows.html -x zap-report-windows.xml -J zap-report-windows.json \
+            -m 1
+
+      - name: Publicar Relatórios (Windows)
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-zap-windows
+          path: |
+            zap-report-windows.html
+            zap-report-windows.xml
+            zap-report-windows.json
+``
