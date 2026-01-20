@@ -1,17 +1,70 @@
 
-name: CI - App Médio (Só Snyk)
+name: CI Missão 2 - Multi-OS com Snyk
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
   push:
-    branches: ["main"]
+    branches: ["**"]
 
 jobs:
-  run_snyk:
-    uses: douglasdeveza/projeto-pratico/.github/workflows/enterprise-snyk-reusable.yml@main
-    with:
-      enable_windows: true     # se o app compila em windows
-      enable_linux: true       # se também roda em linux
-      snyk_severity: high      # gate de severidade
-    secrets:
-      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+  # 1) Hello World no Windows
+  hello-windows:
+    name: 1) Hello World no Windows
+    runs-on: windows-latest
+    steps:
+      - name: Print message
+        shell: pwsh
+        run: echo Hello World from Windows
+
+  # 2) Hello World no Linux
+  hello-linux:
+    name: 2) Hello World no Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print message
+        run: echo "Hello World from Linux"
+
+  # 3) Scan de segurança no Windows (Snyk)
+  scan-windows:
+    name: 3) Security Scan - Windows (Snyk)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Snyk CLI
+        shell: pwsh
+        run: |
+          iwr -useb https://raw.githubusercontent.com/snyk/cli/main/install.ps1 | iex
+          snyk --version
+
+      - name: Authenticate Snyk
+        shell: pwsh
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk auth $env:SNYK_TOKEN
+
+      - name: Snyk Scan (fail on high)
+        shell: pwsh
+        run: snyk test --all-projects --severity-threshold=high
+
+  # 4) Scan de segurança no Linux (Snyk)
+  scan-linux:
+    name: 4) Security Scan - Linux (Snyk)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Snyk CLI
+        run: |
+          curl -sL https://raw.githubusercontent.com/snyk/cli/main/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          snyk --version
+
+      - name: Authenticate Snyk
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk auth "$SNYK_TOKEN"
+
+      - name: Snyk Scan (fail on high)
+        run: snyk test --all-projects --severity-threshold=high
+``
