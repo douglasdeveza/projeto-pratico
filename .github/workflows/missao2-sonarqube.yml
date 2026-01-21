@@ -14,8 +14,8 @@ permissions:
 
 env:
   # 🔁 Preencha com seus dados do SonarCloud
-  SONAR_PROJECT_KEY: SEU_PROJECT_KEY
-  SONAR_ORG: SUA_ORG
+  SONAR_PROJECT_KEY: 0389796221b1a33dce791f4fe26ea8e3cb687b02
+  SONAR_ORG: SONAR_TOKEN
 
 jobs:
   # 1) Hello World no Windows
