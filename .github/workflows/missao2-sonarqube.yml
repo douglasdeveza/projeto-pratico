@@ -1,0 +1,93 @@
+
+name: Missao 2 — CI Multi-OS + Segurança (Sonar)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  # 🔁 Preencha com seus dados do SonarCloud
+  SONAR_PROJECT_KEY: SEU_PROJECT_KEY
+  SONAR_ORG: SUA_ORG
+
+jobs:
+  # 1) Hello World no Windows
+  hello-windows:
+    name: Hello World - Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Hello Windows
+        run: echo "Hello World from Windows"
+
+  # 2) Hello World no Linux
+  hello-linux:
+    name: Hello World - Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Hello Linux
+        run: echo "Hello World from Linux"
+
+  # 3) Sonar no Windows
+  sonar-windows:
+    name: Sonar Scan - Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # (Opcional) Cache para projetos grandes — pode remover se quiser
+      - name: Cache Sonar
+        uses: actions/cache@v4
+        with:
+          path: .sonar/cache
+          key: sonar-${{ runner.os }}-${{ hashFiles('**/*') }}
+          restore-keys: |
+            sonar-${{ runner.os }}-
+
+      - name: SonarCloud Scan (Windows)
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ env.SONAR_ORG }}
+            -Dsonar.sources=.
+            -Dsonar.host.url=https://sonarcloud.io
+
+  # 4) Sonar no Linux
+  sonar-linux:
+    name: Sonar Scan - Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Sonar
+        uses: actions/cache@v4
+        with:
+          path: .sonar/cache
+          key: sonar-${{ runner.os }}-${{ hashFiles('**/*') }}
+          restore-keys: |
+            sonar-${{ runner.os }}-
+
+      - name: SonarCloud Scan (Linux)
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ env.SONAR_ORG }}
+            -Dsonar.sources=.
+            -Dsonar.host.url=https://sonarcloud.io
