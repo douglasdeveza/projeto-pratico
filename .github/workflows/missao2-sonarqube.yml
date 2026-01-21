@@ -1,4 +1,3 @@
-
 name: Missao 2 — CI Multi-OS + Segurança (Sonar)
 
 on:
@@ -52,3 +51,70 @@ jobs:
       - name: Setup Java (Temurin 17)
         uses: actions/setup-java@v4
         with:
+          distribution: temurin
+          java-version: '17'
+
+      # Cache do Sonar (opcional, acelera execuções)
+      - name: Cache Sonar
+        uses: actions/cache@v4
+        with:
+          path: .sonar/cache
+          key: sonar-win-${{ hashFiles('**/*') }}
+          restore-keys: |
+            sonar-win-
+
+      # Baixa e adiciona o SonarScanner (Windows) ao PATH
+      - name: Download SonarScanner CLI (Windows)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = "5.0.1.3006"
+          $zipUrl = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$version-windows.zip"
+          Invoke-WebRequest -Uri $zipUrl -OutFile "sonar-scanner.zip"
+          Expand-Archive -Path "sonar-scanner.zip" -DestinationPath "$env:GITHUB_WORKSPACE\sonar"
+          $scannerDir = Get-ChildItem "$env:GITHUB_WORKSPACE\sonar" | Where-Object { $_.PSIsContainer } | Select-Object -First 1
+          echo "$($scannerDir.FullName)\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      # Executa o scan (usando env + secret)
+      - name: Run SonarScanner (Windows)
+        shell: pwsh
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_KEY: ${{ env.SONAR_PROJECT_KEY }}
+          SONAR_ORG: ${{ env.SONAR_ORG }}
+        run: |
+          sonar-scanner `
+            -D"sonar.projectKey=${env:SONAR_PROJECT_KEY}" `
+            -D"sonar.organization=${env:SONAR_ORG}" `
+            -D"sonar.sources=." `
+            -D"sonar.host.url=https://sonarcloud.io" `
+            -D"sonar.verbose=true" `
+            -D"sonar.login=${env:SONAR_TOKEN}"
+
+  # 4) Sonar no Linux (action oficial)
+  sonar-linux:
+    name: Sonar Scan - Linux (Action oficial)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Sonar
+        uses: actions/cache@v4
+        with:
+          path: .sonar/cache
+          key: sonar-linux-${{ hashFiles('**/*') }}
+          restore-keys: |
+            sonar-linux-
+
+      - name: SonarCloud Scan (Linux)
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ env.SONAR_ORG }}
+            -Dsonar.sources=.
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.verbose=true
