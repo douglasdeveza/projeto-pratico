@@ -1,5 +1,7 @@
 # 🚀 Pipeline CI/CD Multi-OS com Integração SonarCloud
 
+[![Missao 2 — CI Multi-OS + Segurança (Sonar)](https://github.com/douglasdeveza/multi-os-ci-pipeline-sonar/actions/workflows/missao2-sonarqube.yml/badge.svg)](https://github.com/douglasdeveza/multi-os-ci-pipeline-sonar/actions/workflows/missao2-sonarqube.yml)
+
 ## 📌 Sobre o Projeto
 
 Este projeto demonstra a implementação de uma pipeline de Integração Contínua (CI) utilizando GitHub Actions com execução em múltiplos sistemas operacionais (Windows e Linux), evoluindo posteriormente para integração com análise estática de código via SonarCloud.
